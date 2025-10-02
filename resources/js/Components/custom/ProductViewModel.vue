@@ -493,7 +493,7 @@ const htmlContent = `
         format: 'CODE128',
         lineColor: '#000',
         width: 1,
-        height: 35,
+        height: 50,
         displayValue: false,
         margin: 0,
       })
