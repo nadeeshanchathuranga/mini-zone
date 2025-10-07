@@ -16,6 +16,8 @@ class ReturnItem extends Model
         'quantity',
         'reason',
         'return_date',
+        'unit_price',
+        'total_price', 
     ];
 
     // Relationships

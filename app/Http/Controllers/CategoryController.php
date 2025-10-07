@@ -22,11 +22,8 @@ class CategoryController extends Controller
             abort(403, 'Unauthorized');
         }
         Gate::allows('hasRole', ['Admin', 'Manager']);
-        // $paginatedcategories = Category::with('parent')->latest()->paginate(10);
-        // $allcategories = Category::with('parent')->latest()->get();
-        // $allcategories = Category::with('parent')->latest()->get()
         $allcategories = Category::with('parent')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->get() // Get the collection
             ->map(function ($category) {
                 return [
@@ -57,29 +54,6 @@ class CategoryController extends Controller
         ]);
     }
 
-    // public function store(Request $request)
-    // {
-
-
-    //     if (!Gate::allows('hasRole', ['Admin'])) {
-    //         abort(403, 'Unauthorized');
-    //     }
-
-    //     $validated = $request->validate([
-    //         'name' => 'required|string|max:255',
-    //         'parent_id' => 'nullable|exists:categories,id',
-    //     ]);
-
-
-    //     Category::create($validated);
-
-    //     return redirect()->route('categories.index')->banner('Category created successfully.');
-
-    //  }
-
-
-
-
 
     public function store(Request $request)
     {
@@ -105,7 +79,7 @@ class CategoryController extends Controller
         if ($request->has('name')) {
             // Validate name directly
             $validated = $request->validate([
-                'name' => 'required|string|max:191|regex:/^[a-zA-Z\s]+$/|unique:categories,name',
+                'name' => 'required|string|max:191|unique:categories,name',
                  'parent_id' => 'nullable|exists:categories,id',
             ]);
 
@@ -118,11 +92,6 @@ class CategoryController extends Controller
 
         return redirect()->back()->withErrors(['error' => 'Invalid data provided.']);
     }
-
-
-
-
-
 
     public function edit(Category $category)
     {
@@ -137,7 +106,7 @@ class CategoryController extends Controller
             abort(403, 'Unauthorized');
         }
         $validated = $request->validate([
-            'name' => 'required|string|max:191|regex:/^[a-zA-Z\s]+$/|unique:categories,name',
+            'name' => 'required|string|max:191|unique:categories,name',
             'parent_id' => 'nullable|exists:categories,id',
         ]);
 
@@ -158,7 +127,6 @@ class CategoryController extends Controller
 
         return redirect()->route('categories.index')->banner('Category updated successfully.');
 
-        // return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
     }
 
     public function destroy(Category $category)

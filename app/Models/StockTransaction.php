@@ -15,19 +15,20 @@ class StockTransaction extends Model
         'transaction_date',
         'supplier_id',
         'reason',
+        'sale_id',
     ];
 
      // Relationships
      public function product()
      {
-        //  return $this->belongsTo(Product::class, 'product_id','id');
-         return $this->belongsTo(Product::class)->withTrashed();
+         return $this->belongsTo(Product::class, 'product_id','id');
+        //  return $this->belongsTo(Product::class)->withTrashed();
      }
 
      public function supplier()
      {
-
-        return $this->belongsTo(Supplier::class)->withTrashed();
+ return $this->belongsTo(Supplier::class, 'supplier_id','id');
+        // return $this->belongsTo(Supplier::class)->withTrashed();
 
      }
 }

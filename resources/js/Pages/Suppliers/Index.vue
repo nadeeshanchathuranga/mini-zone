@@ -63,7 +63,7 @@
         <div class="flex items-center justify-center space-x-4"></div>
         <p class="text-3xl italic font-bold text-black">
           <span class="px-4 py-1 mr-3 text-white bg-black rounded-xl">
-            
+
             {{ allsuppliers.length }}
           </span>
           <span class="text-xl">/ Total Suppliers</span>
@@ -78,7 +78,7 @@
             Suppliers
           </p>
         </div>
-        
+
         <div class="flex justify-end w-full">
           <!-- <p
 
@@ -165,27 +165,34 @@
                 <td class="p-4 font-bold border-t border-gray-200">
                   {{ supplier.name || "N/A" }}
                 </td>
-                <td class="p-4 border-t border-gray-200">
-                  {{ supplier.contact || "N/A" }}
-                </td>
-                <td class="p-4 border-t border-gray-200">
-                  <!-- <img
-                    v-if="supplier.image"
-                    :src="supplier.image"
-                    alt="Supplier Image"
-                    class="object-cover rounded-md shadow h-15 w-15"
-                  />
-                  <span v-else class="text-gray-500">N/A</span> -->
 
+
+
+                <td class="p-4 border-t border-gray-200">
+  <template v-if="supplier.numbers && supplier.numbers.length">
+    <ul class="list-disc list-inside space-y-1">
+      <li
+        v-for="number in supplier.numbers"
+        :key="number.id"
+        class="text-sm text-gray-800"
+      >
+        {{ number.number }} - {{ number.name || "N/A" }}
+      </li>
+    </ul>
+  </template>
+  <template v-else>
+    <span class="text-gray-500">N/A</span>
+  </template>
+</td>
+
+                <td class="p-4 border-t border-gray-200">
                   <img
-                    :src="
-                      supplier.image
-                        ? `/${supplier.image}`
-                        : '/images/placeholder.jpg'
-                    "
-                    alt="Supplier Image"
-                    class="object-cover rounded-md shadow h-15 w-15"
-                  />
+    v-if="supplier.image"
+    :src="`/${supplier.image}`"
+    alt="Supplier Image"
+    class="w-16 h-16 rounded object-cover"
+  />
+  <span v-else class="text-gray-500">No Image</span>
                 </td>
                 <td class="p-4 border-t border-gray-200">
                   {{ supplier.email || "N/A" }}
@@ -261,6 +268,27 @@
                     >
                       Delete
                     </button>
+
+                      <button
+                      :class="
+                        HasRole(['Admin'])
+                          ? 'px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition'
+                          : 'px-4 py-2 bg-yellow-400 text-white rounded-lg cursor-not-allowed'
+                      "
+                      :title="
+                        HasRole(['Admin'])
+                          ? ''
+                          : 'You do not have permission to view'
+                      "
+                      :disabled="!HasRole(['Admin'])"
+                      @click="
+                        () => {
+                          if (HasRole(['Admin'])) openViewModal(supplier);
+                        }
+                      "
+                    >
+                      View
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -294,6 +322,13 @@
     :selected-supplier="selectedSupplier"
   />
 
+
+  <SupplierViewModel
+  :supplier="selectedSupplier"
+  v-model:open="isViewModalOpen"
+/>
+
+
   <Footer />
 </template>
 
@@ -307,6 +342,7 @@ import Footer from "@/Components/custom/Footer.vue";
 import SupplierCreateModel from "@/Components/custom/SupplierCreateModel.vue";
 import SupplierDeleteModel from "@/Components/custom/SupplierDeleteModel.vue";
 import SupplierUpdateModel from "@/Components/custom/SupplierUpdateModel.vue";
+import SupplierViewModel from "@/Components/custom/SupplierViewModel.vue";
 import Banner from "@/Components/Banner.vue";
 import { HasRole } from "@/Utils/Permissions";
 
@@ -321,6 +357,11 @@ const openEditModal = (supplier) => {
   isEditModalOpen.value = true;
 };
 
+const openViewModal = (supplier) => {
+  selectedSupplier.value = supplier;
+  isViewModalOpen.value = true;
+};
+
 const openDeleteModal = (supplier) => {
   selectedSupplier.value = supplier;
   isDeleteModalOpen.value = true;
@@ -332,30 +373,48 @@ const isCreateModalOpen = ref(false);
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedSupplier = ref(null);
+const isViewModalOpen = ref(false);
 
-$(document).ready(function () {
-  let table = $("#SupplierTable").DataTable({
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const tableId = "#SupplierTable";
+
+  if ($.fn.DataTable.isDataTable(tableId)) {
+    $(tableId).DataTable().clear().destroy();
+  }
+
+  const table = $(tableId).DataTable({
     dom: "Bfrtip",
     pageLength: 10,
+    ordering: true,
+    orderMulti: false,
+    order: [[0, "desc"]],
     buttons: [],
+
     columnDefs: [
-      // Adjust targets if needed, e.g., skip "Actions" column
-      {
-        targets: [1, 2, 3, 5], // Adjust this based on the current column index of "Image" or other columns
-        searchable: false,
-        orderable: false,
-      },
+      { targets: 0, type: "num" },
+      { targets: 2, searchable: false },
     ],
+    // Performance & consistency
+    autoWidth: false,
+    deferRender: true,
+    language: { search: "" },
     initComplete: function () {
-      let searchInput = $("div.dataTables_filter input");
+      const searchInput = $("div.dataTables_filter input");
       searchInput.attr("placeholder", "Search ...");
-      searchInput.off("keyup");
-      searchInput.on("keypress", function (e) {});
-    },
-    language: {
-      search: "",
+      searchInput.on("keypress", function (e) {
+        if (e.which === 13) table.search(this.value).draw();
+      });
+      // Re-apply initial sort explicitly (covers some plugin edge cases)
+      table.order([0, "desc"]).draw();
     },
   });
 });
+
+
+
+
 </script>
 

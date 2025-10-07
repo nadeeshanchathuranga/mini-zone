@@ -28,7 +28,14 @@ class Product extends Model
         'batch_no',
         'total_quantity',
         'purchase_date',
-        'is_promotion',
+        'grn_id',
+        'preorder_level_qty',
+        'expiry_date_margin',
+        'whole_price',
+        'wholesale_discount',
+        'final_whole_price',
+        'is_whole_price_used',
+        'certificate_path',
     ];
 
     // public static function boot()
@@ -51,6 +58,11 @@ class Product extends Model
         return $this->belongsTo(Color::class, 'color_id','id');
     }
 
+    public function grns()
+    {
+        return $this->belongsTo(Grn::class, 'grn_id','id');
+    }
+
 
     public function size()
     {
@@ -64,32 +76,4 @@ class Product extends Model
     protected $casts = [
         'expire_date' => 'date', // Cast expiry_date as a date
     ];
-
-      public function promotionItems()
-    {
-        return $this->hasMany(PromotionItem::class, 'promotion_id');
-    }
-
-    public function components() // many Product via pivot with qty
-    {
-        return $this->belongsToMany(
-            Product::class,
-            'promotion_items',
-            'promotion_id', // this product (pack)
-            'product_id'    // component
-        )->withPivot('quantity')->withTimestamps();
-    }
-
-    // packs that include THIS product as a component
-    public function includedInPromotions()
-    {
-        return $this->belongsToMany(
-            Product::class,
-            'promotion_items',
-            'product_id',    // this product as component
-            'promotion_id'   // pack product
-        )->withPivot('quantity');
-    }
-
-
 }

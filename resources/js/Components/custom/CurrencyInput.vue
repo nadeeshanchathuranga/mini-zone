@@ -13,7 +13,7 @@
   </template>
 
   <script setup>
-  import { ref } from 'vue'
+  import { ref, watch } from 'vue'
   import { useCurrencyInput } from 'vue-currency-input'
 
   const props = defineProps({
@@ -53,4 +53,11 @@
     valueRange: { min: 0 },
     locale: 'en'
   })
+
+  watch(
+  () => props.modelValue,
+  (newValue) => {
+    inputValue.value = newValue ?? ""; // Update local inputValue when parent changes
+  }
+);
   </script>

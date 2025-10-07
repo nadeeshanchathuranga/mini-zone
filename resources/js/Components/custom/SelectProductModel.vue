@@ -160,19 +160,45 @@
                             class="object-cover w-full h-64"
                           />
                         </div>
-                        <div class="px-2 py-4 space-y-4">
-                          <div
-                            class="flex items-start space-x-3 justify-between text-[11px] font-bold tracking-wide"
-                          >
-                            <p class="text-justify">
-                              {{ product.name || "N/A" }}
-                            </p>
-                            <p
-                              class="px-3 text-white bg-green-700 py-2 rounded-full flex items-center"
-                            >
-                              {{ product.selling_price || "N/A" }}
-                            </p>
-                          </div>
+
+
+<div class="px-4 py-4 space-y-4   rounded-xl shadow-sm  ">
+  <!-- Product Name Centered -->
+  <div class="flex justify-center">
+    <p class="text-center text-base font-bold text-white tracking-wide">
+      {{ product.name || "N/A" }}
+    </p>
+  </div>
+
+  <!-- Price Badges -->
+  <div class="flex justify-center gap-3 flex-wrap mt-2">
+    <!-- Retail Price Badge -->
+    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-600 text-white shadow">
+      Retail: {{ product.selling_price ?? "N/A" }} LKR
+    </span>
+
+    <!-- Wholesale Price Badge -->
+    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-600 text-white shadow">
+      QTY: {{ product.stock_quantity ?? "N/A" }}  
+    </span>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                           <div
                             class="flex justify-center space-x-2 items-start w-full"
                           >
@@ -233,7 +259,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+
 
                   <!-- <div class="grid grid-cols-4 gap-8">
                     <div

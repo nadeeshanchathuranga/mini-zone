@@ -241,7 +241,7 @@ $(document).ready(function () {
       {
         targets: 2, // Index of the "Actions" column
         searchable: false, // Disable filtering for this column
-        orderable: false, // Optional: Disable sorting for this column
+         // Optional: Disable sorting for this column
       },
     ],
     initComplete: function () {

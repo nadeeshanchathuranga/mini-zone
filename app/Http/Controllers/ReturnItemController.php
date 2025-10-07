@@ -72,7 +72,7 @@ class ReturnItemController extends Controller
         }
 
         // If data is not JSON, inspect it in other formats
-        dd($request->all());
+        // dd($request->all());
     }
 
 

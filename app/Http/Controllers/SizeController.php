@@ -15,7 +15,7 @@ class SizeController extends Controller
         if (!Gate::allows('hasRole', ['Admin','Manager'])) {
             abort(403, 'Unauthorized');
         }
-        $allsize =Size::orderBy('created_at', 'desc')->get();//
+        $allsize =Size::orderBy('id', 'desc')->get();//
 
         return Inertia::render('Size/Index', [
             'allsize' => $allsize,

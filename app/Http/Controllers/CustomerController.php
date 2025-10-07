@@ -12,37 +12,30 @@ class CustomerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $allcustomers = Customer::orderBy('created_at', 'desc')
-            ->get();
-        $totalCustomers = $allcustomers->count();
+   public function index()
+{
+    $allcustomers = Customer::orderBy('id', 'desc')->get();
+    $totalCustomers = $allcustomers->count();
 
-        return Inertia::render('Customers/Index', [
-            'allcustomers' => $allcustomers,
-            'totalCustomers' => $allcustomers,
-        ]);
-    }
+    return Inertia::render('Customers/Index', [
+        'allcustomers'   => $allcustomers,
+        'totalCustomers' => $totalCustomers, // <-- pass the integer
+    ]);
+}
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     */
+
     public function show(Customer $customer)
     {
         //

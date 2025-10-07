@@ -247,29 +247,60 @@ const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedEmployee = ref(null);
 
-$(document).ready(function () {
-  let table = $("#EmployeeTable").DataTable({
+
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const tableId = "#EmployeeTable";
+
+  if ($.fn.DataTable.isDataTable(tableId)) {
+    $(tableId).DataTable().clear().destroy();
+  }
+
+  const table = $(tableId).DataTable({
     dom: "Bfrtip",
     pageLength: 10,
+    ordering: true,
+    orderMulti: false,
+    order: [[0, "desc"]],
     buttons: [],
-    columnDefs: [
 
-      {
-        targets: [2],
-        searchable: false,
-        orderable: false,
-      },
+    columnDefs: [
+      { targets: 0, type: "num" },
+      { targets: 2, searchable: false },
     ],
+    // Performance & consistency
+    autoWidth: false,
+    deferRender: true,
+    language: { search: "" },
     initComplete: function () {
-      let searchInput = $("div.dataTables_filter input");
+      const searchInput = $("div.dataTables_filter input");
       searchInput.attr("placeholder", "Search ...");
-      searchInput.off("keyup");
-      searchInput.on("keypress", function (e) {});
-    },
-    language: {
-      search: "",
+      searchInput.on("keypress", function (e) {
+        if (e.which === 13) table.search(this.value).draw();
+      });
+      // Re-apply initial sort explicitly (covers some plugin edge cases)
+      table.order([0, "desc"]).draw();
     },
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 

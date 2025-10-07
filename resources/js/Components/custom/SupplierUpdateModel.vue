@@ -1,7 +1,6 @@
 <template>
   <TransitionRoot as="template" :show="open">
-    <Dialog class="relative z-10" @close="$emit('update:open', false)">
-      <!-- Modal Overlay -->
+    <Dialog as="div" class="relative z-50" @close="$emit('update:open', false)">
       <TransitionChild
         as="template"
         enter="ease-out duration-300"
@@ -11,13 +10,10 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <div
-          class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-        />
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" />
       </TransitionChild>
 
-      <!-- Modal Content -->
-      <div class="fixed inset-0 z-10 flex items-center justify-center">
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
         <TransitionChild
           as="template"
           enter="ease-out duration-300"
@@ -27,173 +23,146 @@
           leave-from="opacity-100 scale-100"
           leave-to="opacity-0 scale-95"
         >
-          <DialogPanel
-            class="bg-black border-4 border-blue-600 rounded-[20px] shadow-xl w-5/6 lg:w-3/6 p-10 text-center"
-          >
-            <!-- Modal Title -->
-            <DialogTitle class="text-xl font-bold text-white">
+          <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-8 text-left align-middle shadow-xl transition-all dark:bg-gray-900">
+            <DialogTitle class="text-2xl font-bold text-gray-900   text-center">
               Edit Supplier
             </DialogTitle>
 
-            <form @submit.prevent="submit" enctype="multipart/form-data">
-              <!-- Modal Form -->
-              <div class="grid grid-cols-2 gap-6 mt-6 text-left">
-                <!-- Supplier Name -->
+            <form @submit.prevent="submit" enctype="multipart/form-data" class="mt-6 space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-300">
-                    Supplier Name:
-                  </label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Supplier Name</label>
                   <input
                     v-model="form.name"
                     type="text"
-                    id="name"
                     required
-                    class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-700     shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
-                  <span v-if="form.errors.name" class="mt-4 text-red-500">
-                    {{ form.errors.name }}
-                  </span>
-                </div>
-
-                <!-- Contact -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-300">
-                    Contact:
-                  </label>
-                  <input
-                    v-model="form.contact"
-                    type="text"
-                    id="contact"
-                    required
-                 oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                    class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                  />
-                  <span v-if="form.errors.contact" class="mt-4 text-red-500">
-                    {{ form.errors.contact }}
-                  </span>
+                  <p v-if="form.errors.name" class="text-sm text-red-600 mt-1">{{ form.errors.name }}</p>
                 </div>
 
                 <!-- Email -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-300">
-                    Email:
-                  </label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                   <input
                     v-model="form.email"
                     type="email"
-                    id="email"
                     required
-                    class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-700     shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
-                  <span v-if="form.errors.email" class="mt-4 text-red-500">
-                    {{ form.errors.email }}
-                  </span>
+                  <p v-if="form.errors.email" class="text-sm text-red-600 mt-1">{{ form.errors.email }}</p>
                 </div>
 
                 <!-- Address -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-300">
-                    Address:
-                  </label>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
                   <input
                     v-model="form.address"
                     type="text"
-                    id="address"
                     required
-                    class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-700     shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   />
-                  <span v-if="form.errors.address" class="mt-4 text-red-500">
-                    {{ form.errors.address }}
-                  </span>
+                  <p v-if="form.errors.address" class="text-sm text-red-600 mt-1">{{ form.errors.address }}</p>
                 </div>
 
+                <!-- Phone Contacts -->
+<div class="md:col-span-2">
+  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Contacts</label>
+  <div
+    v-for="(contact, index) in form.phone_numbers"
+    :key="index"
+    class="grid grid-cols-12 gap-2 items-center mt-2"
+  >
+    <!-- Contact Name -->
+    <input
+      v-model="form.phone_numbers[index].name"
+      type="text"
+      placeholder="Contact Name"
+      required
+      class="col-span-4 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+
+    <!-- Contact Phone -->
+    <input
+      v-model="form.phone_numbers[index].phone"
+      type="tel"
+      inputmode="numeric"
+      maxlength="10"
+      minlength="10"
+      pattern="[0-9]*"
+      @input="form.phone_numbers[index].phone = form.phone_numbers[index].phone.replace(/\D/g, '')"
+      placeholder="Phone Number"
+      required
+      class="col-span-6 rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    />
+
+    <!-- Remove Button -->
+    <button
+      v-if="form.phone_numbers.length > 1"
+      type="button"
+      @click="removePhoneNumber(index)"
+      class="col-span-2 text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-md"
+    >
+      Remove
+    </button>
+
+    <!-- Optional Phone Validation -->
+    <p
+      v-if="form.phone_numbers[index].phone && form.phone_numbers[index].phone.length !== 10"
+      class="col-span-12 text-red-600 text-xs"
+    >
+      Phone number must be exactly 10 digits.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    @click="addPhoneNumber"
+    class="mt-3 inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md"
+  >
+    + Add Contact
+  </button>
+</div>
 
 
-                <div class="w-full">
-                   <label
-                    for="image"
-                    class="block text-sm font-medium text-gray-300"
-                    >Image:</label
-                  >
-                  <div class="w-full md:w-6/12">
-                    <label class="block text-sm font-medium text-white"
-                      >          Supplier Image:</label
-                    >
-                    <div class="mt-2">
-                      <img
-                        v-if="selectedSupplier.image"
-                        :src="`/${selectedSupplier.image}`"
-                        alt="Product Image"
-                        class="rounded-lg "
-                      />
-
-                      <p v-else class="text-sm text-gray-500">
-                        No image available
-                      </p>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    id="image"
-                    @change="handleImageUpload"
-                    class="w-full px-4 py-2 mt-2 text-white bg-gray-800 rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                  />
-                  <span v-if="form.errors.image" class="mt-2 text-red-500">
-                    {{ form.errors.image }}
-                  </span>
-                  </div>
-
-
-
-
-
-
-
-
-                <!-- Image -->
-                <!-- <div class="col-span-2">
-                  <label class="block text-sm font-medium text-gray-300">
-                    Supplier Image:
-                  </label>
-
-                  <div class="mt-2">
+                <!-- Image Upload -->
+                <div class="md:col-span-2">
+                  <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Image</label>
+                  <div class="mt-2 flex items-center space-x-4">
                     <img
                       v-if="selectedSupplier.image"
                       :src="`/${selectedSupplier.image}`"
-                      alt="Product Image"
-                      class="rounded-lg"
+                      alt="Supplier"
+                      class="h-20 w-20 rounded-md object-cover border"
                     />
-
-                    <p v-else class="text-sm text-gray-500">
-                      No image available
-                    </p>
+                    <p v-else class="text-sm text-gray-500 dark:text-gray-400">No image available</p>
                   </div>
-
                   <input
                     type="file"
                     id="image"
                     @change="handleImageUpload"
-                    class="w-full px-4 py-2 mt-2 text-white bg-gray-800 rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    class="mt-2 block w-full text-sm text-gray-900   file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
                   />
-                  <span v-if="form.errors.image" class="mt-2 text-red-500">
-                    {{ form.errors.image }}
-                  </span>
-                </div> -->
+                  <p v-if="form.errors.image" class="text-sm text-red-600 mt-1">{{ form.errors.image }}</p>
+                </div>
               </div>
 
-              <!-- Modal Buttons -->
-              <div class="mt-6 space-x-4 text-center">
+              <!-- Action Buttons -->
+              <div class="flex justify-end space-x-4 pt-6 border-t dark:border-gray-700">
                 <button
-                  class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-                  type="submit" @click="() => { playClickSound();}"
-                >
-                  Save
-                </button>
-                <button
-                  class="px-4 py-2 text-gray-700 bg-gray-300 rounded hover:bg-gray-400"
-                 @click="() => { playClickSound(); emit('update:open', false); }"
+                  type="button"
+                  @click="() => { playClickSound(); emit('update:open', false); }"
+                  class="px-4 py-2 rounded-md text-white   bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  @click="playClickSound"
+                  class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Save
                 </button>
               </div>
             </form>
@@ -215,75 +184,75 @@ import {
 import { ref, watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
 
-// Emit events for parent communication
 const emit = defineEmits(["update:open"]);
 
-const playClickSound = () => {
-  const clickSound = new Audio("/sounds/click-sound.mp3");
-  clickSound.play();
-};
-
-// Props for modal visibility and selected supplier data
 const { open, selectedSupplier } = defineProps({
-  open: {
-    type: Boolean,
-    required: true,
-  },
-  selectedSupplier: {
-    type: Object,
-    default: null, // Ensure it defaults to null
-  },
+  open: Boolean,
+  selectedSupplier: Object,
 });
 
-// Reactive form for managing supplier details
 const form = useForm({
   name: "",
-  contact: "",
   email: "",
   address: "",
-  image: null, // For file upload
+  image: null,
+  phone_numbers: [
+    { name: "", phone: "" },
+  ],
 });
 
-// Handle file input for the image upload
+const playClickSound = () => {
+  new Audio("/sounds/click-sound.mp3").play();
+};
+
 const handleImageUpload = (event) => {
   form.image = event.target.files[0];
 };
 
-// Watch for changes in `selectedSupplier` and pre-fill the form
+const addPhoneNumber = () => {
+  form.phone_numbers.push({ name: "", phone: "" });
+};
+
+const removePhoneNumber = (index) => {
+  if (form.phone_numbers.length > 1) {
+    form.phone_numbers.splice(index, 1);
+  }
+};
+
 watch(
   () => selectedSupplier,
-  (newValue) => {
-    if (newValue) {
-      form.name = newValue.name || "";
-      form.contact = newValue.contact || "";
-      form.email = newValue.email || "";
-      form.address = newValue.address || "";
+  (newVal) => {
+    if (newVal) {
+      form.name = newVal.name || "";
+      form.email = newVal.email || "";
+      form.address = newVal.address || "";
       form.image = null;
+      form.phone_numbers = newVal.numbers?.map((n) => ({
+        name: n.name || "",
+        phone: n.number || "",
+      })) || [{ name: "", phone: "" }];
     } else {
-      form.reset(); // Reset form if no supplier selected
+      form.reset();
+      form.phone_numbers = [{ name: "", phone: "" }];
     }
   },
   { immediate: true }
 );
 
-// Handle form submission
+
 const submit = () => {
-  if (selectedSupplier && selectedSupplier.id) {
-    // Update existing supplier
+  if (selectedSupplier?.id) {
     form.post(`/suppliers/${selectedSupplier.id}`, {
       onSuccess: () => {
         form.reset();
-        emit("update:open", false); // Close modal on success
-      },
-    });
-  } else {
-    // Create new supplier
-    form.post(`/suppliers`, {
-      onSuccess: () => {
-        form.reset();
-        emit("update:open", false); // Close modal on success
+        form.phone_numbers = [""];
+        emit("update:open", false);
       },
     });
   }
 };
 </script>
+
+<style scoped>
+/* Optional: Add custom animations or transitions if needed */
+</style>

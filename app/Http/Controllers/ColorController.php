@@ -15,7 +15,7 @@ class ColorController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $allcolors = Color::orderBy('created_at', 'desc')->get(); //
+        $allcolors = Color::orderBy('id', 'desc')->get(); //
 
         return Inertia::render('Color/Index', [
             'allcolors' => $allcolors,
@@ -23,23 +23,6 @@ class ColorController extends Controller
         ]);
     }
 
-    // public function store(Request $request)
-    // {
-
-    //     if (!Gate::allows('hasRole', ['Admin'])) {
-    //         abort(403, 'Unauthorized');
-    //     }
-
-    //     $validated = $request->validate([
-    //         'name' => 'required|string|max:255',
-
-    //     ]);
-
-    //     Color::create($validated);
-
-    //     return redirect()->route('colors.index')->banner('Color created successfully.');
-
-    // }
     public function store(Request $request)
     {
 
@@ -75,11 +58,6 @@ class ColorController extends Controller
 
         return redirect()->back()->withErrors(['error' => 'Invalid data provided.']);
     }
-
-
-
-
-
 
     public function update(Request $request, Color $color)
     {

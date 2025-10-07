@@ -17,7 +17,7 @@ class EmployeeController extends Controller
         if (!Gate::allows('hasRole', ['Admin','Manager'])) {
             abort(403, 'Unauthorized');
         }
-        $allemployee = Employee::orderBy('created_at', 'desc')->get();
+        $allemployee = Employee::orderBy('id', 'desc')->get();
 
 
 

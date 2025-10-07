@@ -12,7 +12,7 @@ trait GeneratesUniqueCode
      * @param int $length Length of the unique code.
      * @return string
      */
-    public function generateUniqueCode($length = 8)
+    public function generateUniqueCode($length = 7)
     {
         // Generate the base code with 12 digits (timestamp + random numeric string)
         $timestamp = substr(now()->timestamp, -6); // Use the last 6 digits of the current timestamp
@@ -21,7 +21,7 @@ trait GeneratesUniqueCode
         $codeWithoutChecksum = $timestamp . $random; // Combine timestamp and random digits to get 12 digits
 
         // Ensure the code is exactly 12 digits
-        $codeWithoutChecksum = substr($codeWithoutChecksum, 0, 8);
+        $codeWithoutChecksum = substr($codeWithoutChecksum, 0, 12);
 
         // Calculate the checksum for EAN-13
         $checksum = $this->calculateEAN13Checksum($codeWithoutChecksum);

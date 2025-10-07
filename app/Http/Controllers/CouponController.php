@@ -15,7 +15,7 @@ class CouponController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $allcoupons = Coupon::orderBy('created_at', 'desc')->get(); //
+        $allcoupons = Coupon::orderBy('id', 'desc')->get(); //
 
         return Inertia::render('Coupon/Index', [
             'allCoupons' => $allcoupons,

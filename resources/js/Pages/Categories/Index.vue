@@ -261,30 +261,47 @@ const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedCategory = ref(null);
 
+
+
+
+
+
+
+
+
+
+
 $(document).ready(function () {
-  let table = $("#CategoryTable").DataTable({
-    dom: "Bfrtip",
-    pageLength: 10,
-    buttons: [],
-    columnDefs: [
-      {
-        targets: 2,
-        searchable: false,
-        orderable: false,
-      },
-    ],
-    initComplete: function () {
-      let searchInput = $("div.dataTables_filter input");
-      searchInput.attr("placeholder", "Search ...");
-      searchInput.on("keypress", function (e) {
-        if (e.which == 13) {
-          table.search(this.value).draw();
-        }
-      });
+ let table = $("#CategoryTable").DataTable({
+  dom: "frtip",        // remove "B" if you don't load Buttons
+  pageLength: 10,
+  columnDefs: [
+    {
+      targets: 0,       // id column
+      type: "num"       // force numeric sort
     },
-    language: {
-      search: "",
-    },
-  });
+    {
+      targets: -1,      // last column (Action)
+      orderable: false,
+      searchable: false
+    }
+  ],
+  order: [[0, "desc"]],
+  language: { search: "" },
+  initComplete: function () {
+    let searchInput = $("div.dataTables_filter input");
+    searchInput.attr("placeholder", "Search ...");
+  }
 });
+
+});
+
+
+
+
+
+
+
+
+
 </script>

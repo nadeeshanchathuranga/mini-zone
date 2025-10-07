@@ -245,30 +245,40 @@ const isCreateModalOpen = ref(false);
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const selectedColor = ref(null);
+ 
+
+
 
 $(document).ready(function () {
-  let table = $("#ColorTable").DataTable({
-    dom: "Bfrtip",
-    pageLength: 10,
-    buttons: [],
-    columnDefs: [
-
-      {
-        targets: [2],
-        searchable: false,
-        orderable: false,
-      },
-    ],
-    initComplete: function () {
-      let searchInput = $("div.dataTables_filter input");
-      searchInput.attr("placeholder", "Search ...");
-      searchInput.off("keyup");
-      searchInput.on("keypress", function (e) {});
+ let table = $("#ColorTable").DataTable({
+  dom: "frtip",        // remove "B" if you don't load Buttons
+  pageLength: 10,
+  columnDefs: [
+    {
+      targets: 0,       // id column
+      type: "num"       // force numeric sort
     },
-    language: {
-      search: "",
-    },
-  });
+    {
+      targets: -1,      // last column (Action)
+      orderable: false,
+      searchable: false
+    }
+  ],
+  order: [[0, "desc"]],
+  language: { search: "" },
+  initComplete: function () {
+    let searchInput = $("div.dataTables_filter input");
+    searchInput.attr("placeholder", "Search ...");
+  }
 });
+
+});
+
+
+
+
+
+
+
 </script>
 
