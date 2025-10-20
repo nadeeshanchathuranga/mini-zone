@@ -190,102 +190,111 @@
                     No Products or Services to show
                   </p>
 
+               
                   <!-- Product List -->
-                  <div
-                    class="flex items-center w-full py-3 border-b border-black"
-                    v-for="item in products"
-                    :key="item.id"
-                  >
-                    <div class="flex w-1/6">
-                      <img
-                        :src="item.image ? `/${item.image}` : '/images/placeholder.jpg'"
-                        alt="Product Image"
-                        class="object-cover w-14 h-14 border border-gray-500 rounded"
-                      />
-                    </div>
+<div
+  class="flex items-center w-full py-3 border-b border-black"
+  v-for="(item, index) in products"
+  :key="item.id"
+>
+  <!-- Number -->
+  <div class="flex w-1/12 justify-center">
+    <span class="text-xl font-bold text-gray-700">{{ index + 1 }}.</span>
+  </div>
 
-                    <div class="flex flex-col justify-between w-5/6 gap-2">
-                      <p class="text-xl text-gray-900 font-semibold">
-                        {{ item.name }}
-                      </p>
+  <!-- Product Image -->
+  <div class="flex w-1/6">
+    <img
+      :src="item.image ? `/${item.image}` : '/images/placeholder.jpg'"
+      alt="Product Image"
+      class="object-cover w-14 h-14 border border-gray-500 rounded"
+    />
+  </div>
 
-                      <div class="flex items-center justify-between w-full">
-                        <div class="flex items-center gap-2">
-                          <button
-                            @click="incrementQuantity(item.id)"
-                            class="flex items-center justify-center w-9 h-9 text-white bg-black rounded hover:bg-gray-800 text-xl"
-                            aria-label="Increase"
-                          >
-                            <i class="ri-add-line"></i>
-                          </button>
-                          <input
-                            type="number"
-                            v-model.number="item.quantity"
-                            min="0"
-                            class="bg-[#D9D9D9] border-2 border-black h-10 w-20 text-gray-900 rounded text-center text-xl"
-                          />
-                          <button
-                            @click="decrementQuantity(item.id)"
-                            class="flex items-center justify-center w-9 h-9 text-white bg-black rounded hover:bg-gray-800 text-xl"
-                            aria-label="Decrease"
-                          >
-                            <i class="ri-subtract-line"></i>
-                          </button>
-                        </div>
+  <!-- Product Details -->
+  <div class="flex flex-col justify-between w-2/3 gap-2">
+    <p class="text-xl text-gray-900 font-semibold">
+      {{ item.name }}
+    </p>
 
-                        <div class="flex items-center justify-center">
-                          <div class="text-right">
-                            <p
-                              v-if="(isWholesale ? item.wholesale_discount : item.discount) && (isWholesale ? item.wholesale_discount : item.discount) > 0 && item.apply_discount === false && !appliedCoupon"
-                              @click="applyDiscount(item.id)"
-                              class="cursor-pointer inline-block py-1 px-2 bg-green-600 rounded-lg font-bold text-white text-sm"
-                            >
-                              Apply {{ isWholesale ? item.wholesale_discount : item.discount }}% Off
-                            </p>
+    <div class="flex items-center justify-between w-full">
+      <div class="flex items-center gap-2">
+        <button
+          @click="incrementQuantity(item.id)"
+          class="flex items-center justify-center w-9 h-9 text-white bg-black rounded hover:bg-gray-800 text-xl"
+          aria-label="Increase"
+        >
+          <i class="ri-add-line"></i>
+        </button>
+        <input
+          type="number"
+          v-model.number="item.quantity"
+          min="0"
+          class="bg-[#D9D9D9] border-2 border-black h-10 w-20 text-gray-900 rounded text-center text-xl"
+        />
+        <button
+          @click="decrementQuantity(item.id)"
+          class="flex items-center justify-center w-9 h-9 text-white bg-black rounded hover:bg-gray-800 text-xl"
+          aria-label="Decrease"
+        >
+          <i class="ri-subtract-line"></i>
+        </button>
+      </div>
 
-                            <div v-if="isReturnBill" class="mt-2">
-                              <select
-                                v-model="item.returnReason"
-                                class="w-full border border-gray-400 px-2 py-1 rounded text-xl"
-                                required
-                              >
-                                <option value="" disabled selected>Select a reason</option>
-                                <option
-                                  v-for="reason in props.returnReasons"
-                                  :key="reason.id"
-                                  :value="reason.id"
-                                >
-                                  {{ reason.reason }}
-                                </option>
-                              </select>
-                            </div>
+      <div class="flex items-center justify-center">
+        <div class="text-right">
+          <p
+            v-if="(isWholesale ? item.wholesale_discount : item.discount) && (isWholesale ? item.wholesale_discount : item.discount) > 0 && item.apply_discount === false && !appliedCoupon"
+            @click="applyDiscount(item.id)"
+            class="cursor-pointer inline-block py-1 px-2 bg-green-600 rounded-lg font-bold text-white text-sm"
+          >
+            Apply {{ isWholesale ? item.wholesale_discount : item.discount }}% Off
+          </p>
 
-                            <p
-                              v-if="(isWholesale ? item.wholesale_discount : item.discount) && (isWholesale ? item.wholesale_discount : item.discount) > 0 && item.apply_discount === true && !appliedCoupon"
-                              @click="removeDiscount(item.id)"
-                              class="cursor-pointer inline-block mt-1 py-1 px-2 bg-red-600 rounded-lg font-bold text-white text-sm"
-                            >
-                              Remove {{ isWholesale ? item.wholesale_discount : item.discount }}% Off
-                            </p>
+          <div v-if="isReturnBill" class="mt-2">
+            <select
+              v-model="item.returnReason"
+              class="w-full border border-gray-400 px-2 py-1 rounded text-xl"
+              required
+            >
+              <option value="" disabled selected>Select a reason</option>
+              <option
+                v-for="reason in props.returnReasons"
+                :key="reason.id"
+                :value="reason.id"
+              >
+                {{ reason.reason }}
+              </option>
+            </select>
+          </div>
 
-                            <p class="text-xl font-bold text-gray-900 mt-1">
-                              {{ isWholesale ? item.whole_price : item.selling_price }} LKR
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+          <p
+            v-if="(isWholesale ? item.wholesale_discount : item.discount) && (isWholesale ? item.wholesale_discount : item.discount) > 0 && item.apply_discount === true && !appliedCoupon"
+            @click="removeDiscount(item.id)"
+            class="cursor-pointer inline-block mt-1 py-1 px-2 bg-red-600 rounded-lg font-bold text-white text-sm"
+          >
+            Remove {{ isWholesale ? item.wholesale_discount : item.discount }}% Off
+          </p>
 
-                    <div class="flex justify-end w-1/6">
-                      <button
-                        @click="removeProduct(item.id)"
-                        class="text-2xl text-gray-900 border-2 border-black rounded-full w-9 h-9 flex items-center justify-center hover:bg-gray-50"
-                        aria-label="Remove"
-                      >
-                        <i class="ri-close-line"></i>
-                      </button>
-                    </div>
-                  </div>
+          <p class="text-xl font-bold text-gray-900 mt-1">
+            {{ isWholesale ? item.whole_price : item.selling_price }} LKR
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remove Button -->
+  <div class="flex justify-end w-1/12">
+    <button
+      @click="removeProduct(item.id)"
+      class="text-2xl text-gray-900 border-2 border-black rounded-full w-9 h-9 flex items-center justify-center hover:bg-gray-50"
+      aria-label="Remove"
+    >
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+</div>
 
                   <!-- Service List -->
                   <div v-if="services.length > 0" class="mt-3 min-w-[300px]">

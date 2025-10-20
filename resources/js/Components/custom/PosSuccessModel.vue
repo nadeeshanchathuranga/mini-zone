@@ -172,11 +172,11 @@ const handlePrintReceipt = () => {
   const total = subTotal - Number(totalDiscount) - customDiscount;
 
   const productRows = props.products
-    .map((product) => {
+    .map((product, index) => {
       return `
         <tr>
           <td colspan="3" style="padding: 4px 0; font-weight: bold;">
-            ${product.name}
+            ${index + 1}. ${product.name}
           </td>
         </tr>
         <tr style="border-bottom: 1px dashed #999;">
