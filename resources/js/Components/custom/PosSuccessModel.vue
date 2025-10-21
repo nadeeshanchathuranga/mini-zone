@@ -151,28 +151,58 @@ onBeforeUnmount(() => {
 });
 
 const handlePrintReceipt = () => {
-  // Calculate totals
-  const subTotal = props.products.reduce(
-    (sum, product) => sum + parseFloat(product.selling_price) * product.quantity,
-    0
-  );
-  const customDiscount = Number(props.custom_discount || 0);
-  const totalDiscount = props.products
-    .reduce((total, item) => {
-      if (item.discount && item.discount > 0 && item.apply_discount == true) {
-        const discountAmount =
-          (parseFloat(item.selling_price) - parseFloat(item.discounted_price)) *
-          item.quantity;
-        return total + discountAmount;
+  // Calculate totals using per-product discount and custom discount
+  const subTotal = props.products.reduce((sum, product) => {
+    // Use discounted price if available, else fallback
+    let price = parseFloat(product.selling_price);
+    if (product.discount_value && product.discount_type) {
+      if (product.discount_type === 'rs') {
+        price = Math.max(price - parseFloat(product.discount_value), 0);
+      } else if (product.discount_type === 'percent') {
+        price = Math.max(price - (price * parseFloat(product.discount_value) / 100), 0);
       }
-      return total;
-    }, 0)
-    .toFixed(2);
+    }
+    return sum + price * product.quantity;
+  }, 0);
 
-  const total = subTotal - Number(totalDiscount) - customDiscount;
+  // Calculate total discount (sum of all per-product discounts)
+  const totalDiscount = props.products.reduce((total, product) => {
+    let discount = 0;
+    const price = parseFloat(product.selling_price);
+    if (product.discount_value && product.discount_type) {
+      if (product.discount_type === 'rs') {
+        discount = parseFloat(product.discount_value) * product.quantity;
+      } else if (product.discount_type === 'percent') {
+        discount = (price * parseFloat(product.discount_value) / 100) * product.quantity;
+      }
+    }
+    return total + discount;
+  }, 0);
 
+  // Custom discount (fixed or percent)
+  let customDiscount = Number(props.custom_discount || 0);
+  if (props.custom_discount_type === 'percent') {
+    customDiscount = (subTotal * customDiscount) / 100;
+  }
+
+  // Final total
+  const total = subTotal - customDiscount;
+
+  // Product rows with discount display
   const productRows = props.products
     .map((product, index) => {
+      let originalPrice = parseFloat(product.selling_price);
+      let discountedPrice = originalPrice;
+      let discountLabel = '';
+      if (product.discount_value && product.discount_type) {
+        if (product.discount_type === 'rs') {
+          discountedPrice = Math.max(originalPrice - parseFloat(product.discount_value), 0);
+          discountLabel = `${product.discount_value} Rs OFF`;
+        } else if (product.discount_type === 'percent') {
+          discountedPrice = Math.max(originalPrice - (originalPrice * parseFloat(product.discount_value) / 100), 0);
+          discountLabel = `${product.discount_value}% OFF`;
+        }
+      }
       return `
         <tr>
           <td colspan="3" style="padding: 4px 0; font-weight: bold;">
@@ -182,21 +212,13 @@ const handlePrintReceipt = () => {
         <tr style="border-bottom: 1px dashed #999;">
           <td></td>
           <td style="text-align: center; padding: 2px 0;">
-            ${product.selling_price} × ${product.quantity}
-            ${
-              product.discount > 0 && product.apply_discount
-                ? `<div style="font-weight: bold; font-size: 9px; background:black; color:white; text-align:center; margin-top:2px; border-radius:3px; display:inline-block; padding:0 4px;">
-                     ${product.discount}% OFF
-                   </div>`
-                : ""
-            }
+            <span style="${discountedPrice < originalPrice ? 'text-decoration:line-through;color:#888;' : ''}">${originalPrice.toFixed(2)}</span>
+            ${discountedPrice < originalPrice ? `<br/><span style='color:green;font-weight:bold;'>${discountedPrice.toFixed(2)}</span>` : ''}
+            × ${product.quantity}
+            ${discountLabel ? `<div style="font-weight: bold; font-size: 9px; background:black; color:white; text-align:center; margin-top:2px; border-radius:3px; display:inline-block; padding:0 4px;">${discountLabel}</div>` : ''}
           </td>
           <td style="text-align: right; padding: 2px 0;">
-            ${
-              product.discount > 0 && product.apply_discount
-                ? (product.selling_price * product.quantity * (1 - product.discount / 100)).toFixed(2)
-                : (product.selling_price * product.quantity).toFixed(2)
-            }
+            ${(discountedPrice * product.quantity).toFixed(2)}
           </td>
         </tr>
       `;
