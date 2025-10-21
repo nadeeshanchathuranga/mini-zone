@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\StockTransaction;
+use App\Models\Unit;
 use App\Traits\GeneratesUniqueCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -48,7 +49,7 @@ public function fetchProducts(Request $request)
     $stockStatus = $request->input('stockStatus');
     $selectedCategory = $request->input('selectedCategory');
 
-    $productsQuery = Product::with('category', 'color', 'size', 'supplier')
+    $productsQuery = Product::with('category', 'color', 'size', 'supplier','unit')
         ->whereNotNull('products.name')
         ->when($query, function ($qb) use ($query) {
             $qb->where(function ($sub) use ($query) {
@@ -149,11 +150,15 @@ public function fetchProducts(Request $request)
         // Total filtered products
         $totalProducts = $products->total();
 
+         $units = Unit::orderBy('id', 'desc')->get();
+         
+
         // Other dropdown / alert data
         $allcategories = Category::with('parent')->get()->map(function ($category) {
             $category->hierarchy_string = $category->hierarchy_string;
             return $category;
         });
+        
 
         $preOrderProducts = Product::with(['category', 'supplier', 'color', 'size'])
             ->whereColumn('total_quantity', '<=', 'preorder_level_qty')
@@ -184,6 +189,7 @@ public function fetchProducts(Request $request)
             'totalProducts' => $totalProducts,
             'search' => $query,
             'sort' => $sortOrder,
+            'units' => $units,
             'color' => $selectedColor,
             'size' => $selectedSize,
             'stockStatus' => $stockStatus,
@@ -243,6 +249,7 @@ public function fetchProducts(Request $request)
             //     'max:50',
             //     Rule::unique('products')->whereNull('deleted_at'),
             // ],
+             'unit_id' => 'nullable|exists:units,id',
             'size_id' => 'nullable|exists:sizes,id',
             'color_id' => 'nullable|exists:colors,id',
             'cost_price' => 'nullable|numeric|min:0',
@@ -395,6 +402,7 @@ public function fetchProducts(Request $request)
             'expire_date' => 'nullable|date',
             'expiry_date_margin' => 'nullable|integer|min:0',
             'preorder_level_qty' => 'nullable|integer|min:0',
+            'unit_id' => 'nullable|exists:units,id',
             'purchase_date' => 'nullable|date',
             'batch_no' => 'nullable|string|max:50',
             'whole_price' => [
@@ -537,6 +545,7 @@ public function fetchProducts(Request $request)
                 'discounted_price' => 'nullable|numeric|min:0',
                 'discount' => 'nullable|numeric|min:0|max:100',
                 'stock_quantity' => 'required|integer|min:0',
+                'unit_id' => 'nullable|exists:units,id',
 
                 'image' => 'nullable|image|max:2048',
                 'certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
