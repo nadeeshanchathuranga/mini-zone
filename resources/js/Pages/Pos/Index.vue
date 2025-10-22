@@ -239,6 +239,23 @@
         >
           <i class="ri-subtract-line"></i>
         </button>
+        <!-- Discount Controls -->
+        <div class="flex items-center gap-2 ml-4">
+          <input
+            type="number"
+            min="0"
+            v-model.number="item.discount_value"
+            class="w-20 border border-gray-400 rounded px-2 py-1 text-xl"
+            placeholder="Discount"
+          />
+          <select
+            v-model="item.discount_type"
+            class="border border-gray-400 rounded px-2 py-1 text-xl"
+          >
+            <option value="rs">Rs</option>
+            <option value="percent">%</option>
+          </select>
+        </div>
       </div>
 
       <div class="flex items-center justify-center">
@@ -276,9 +293,21 @@
             Remove {{ isWholesale ? item.wholesale_discount : item.discount }}% Off
           </p>
 
-          <p class="text-xl font-bold text-gray-900 mt-1">
-            {{ isWholesale ? item.whole_price : item.selling_price }} LKR
-          </p>
+          <div class="flex flex-col items-end mt-1">
+            <template v-if="item.discount_value && item.discount_type && getOriginalPrice(item) > getDiscountedPrice(item)">
+              <span class="text-green-700 font-bold text-xl mb-1">
+                {{ getDiscountedPrice(item).toFixed(2) }} LKR
+              </span>
+              <span class="line-through text-gray-400 text-base">
+                {{ getOriginalPrice(item).toFixed(2) }} LKR
+              </span>
+            </template>
+            <template v-else>
+              <span class="text-xl font-bold text-gray-900">
+                {{ getOriginalPrice(item).toFixed(2) }} LKR
+              </span>
+            </template>
+          </div>
         </div>
       </div>
     </div>
@@ -893,6 +922,24 @@ const props = defineProps({
 });
 
 const products = ref([]);
+
+// Helper: get original price (per item)
+function getOriginalPrice(item) {
+  return isWholesale.value ? parseFloat(item.whole_price) : parseFloat(item.selling_price);
+}
+
+// Helper: get discounted price (per item)
+function getDiscountedPrice(item) {
+  const price = getOriginalPrice(item);
+  if (item.discount_value && item.discount_type) {
+    if (item.discount_type === 'rs') {
+      return Math.max(price - parseFloat(item.discount_value), 0);
+    } else if (item.discount_type === 'percent') {
+      return Math.max(price - (price * parseFloat(item.discount_value) / 100), 0);
+    }
+  }
+  return price;
+}
 const services = ref([]); 
 const isSuccessModalOpen = ref(false);
 const isAlertModalOpen = ref(false);
@@ -1223,7 +1270,7 @@ const updateOrder = async () => {
 
 const subtotal = computed(() => {
   const productTotal = products.value.reduce((t, item) => {
-    const price = isWholesale.value ? parseFloat(item.whole_price) : parseFloat(item.selling_price);
+    const price = getDiscountedPrice(item);
     return t + price * (Number(item.quantity) || 0);
   }, 0);
 

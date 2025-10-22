@@ -358,12 +358,31 @@ public function submit(Request $request)
         }
 
         // ---- SALE CREATION ----
+        // Calculate the true bill amount as the sum of all discounted product prices (matches frontend bill)
+        $discountedTotal = 0.0;
+        foreach ($products as $p) {
+            $price = (float)($p['unit_price'] ?? $p['__resolved_unit_price']);
+            if (isset($p['discount_value']) && isset($p['discount_type'])) {
+                if ($p['discount_type'] === 'rs') {
+                    $price = max($price - (float)$p['discount_value'], 0);
+                } elseif ($p['discount_type'] === 'percent') {
+                    $price = max($price - ($price * (float)$p['discount_value'] / 100), 0);
+                }
+            }
+            $discountedTotal += $price * (float)$p['quantity'];
+        }
+        // Apply custom discount (fixed or percent)
+        $customDiscount = (float) ($validated['custom_discount'] ?? 0);
+        if ($customType === 'percent') {
+            $customDiscount = ($discountedTotal * $customDiscount) / 100;
+        }
+        $finalBillAmount = $discountedTotal - $customDiscount;
         $saleData = [
             'customer_id'    => $customer?->id,
             'employee_id'    => $validated['employee_id'] ?? null,
             'user_id'        => $validated['userId'],
             'order_id'       => $validated['orderid'],
-            'total_amount'   => $totalAmount,
+            'total_amount'   => $finalBillAmount,
             'discount'       => $totalDiscount,
             'total_cost'     => $totalCost,
             'payment_method' => $validated['paymentMethod'], // cash|card|cheque
@@ -390,11 +409,13 @@ public function submit(Request $request)
             $unitPrice = (float)$p['__resolved_unit_price'];
 
             SaleItem::create([
-                'sale_id'     => $sale->id,
-                'product_id'  => $productModel->id,
-                'quantity'    => $qty,
-                'unit_price'  => $unitPrice,
-                'total_price' => $qty * $unitPrice,
+                'sale_id'        => $sale->id,
+                'product_id'     => $productModel->id,
+                'quantity'       => $qty,
+                'unit_price'     => $unitPrice,
+                'total_price'    => $qty * $unitPrice,
+                'discount_amount'=> isset($p['discount_value']) ? $p['discount_value'] : null,
+                'discount_type'  => isset($p['discount_type']) ? $p['discount_type'] : null,
             ]);
 
             StockTransaction::create([
