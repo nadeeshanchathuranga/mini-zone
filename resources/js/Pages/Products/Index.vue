@@ -429,6 +429,7 @@
          :sizes="sizes"
          v-model:open="isEditModalOpen"
          :selected-product="selectedProduct"
+         :units="props.units || []"
          />
       <ProductDuplicateModel
          :categories="allcategories"
