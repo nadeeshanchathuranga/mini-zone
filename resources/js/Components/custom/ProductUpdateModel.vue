@@ -170,6 +170,37 @@
                                  >{{ form.errors.batch_no }}</span
                                  >
                            </div>
+                           <!-- Type Dropdown -->
+<div class="w-full">
+  <label class="block text-sm font-medium text-gray-300">Type:</label>
+  <select
+    v-model="form.type"
+    id="type"
+    class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+  >
+    <option value="">Select Type</option>
+    <option value="Normal">Normal</option>
+    <option value="Weight Based">Weight Based</option>
+  </select>
+  <span v-if="form.errors.type" class="mt-4 text-red-500">{{ form.errors.type }}</span>
+</div>
+
+<!-- Unit Dropdown (shown only if Weight Based) -->
+<div class="w-full" v-if="form.type === 'Weight Based'">
+  <label class="block text-sm font-medium text-gray-300">Unit:</label>
+  <select
+    v-model="form.unit_id"
+    id="unit_id"
+    class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+  >
+    <option value="">Select Unit</option>
+    <option v-for="unit in units" :key="unit.id" :value="unit.id">
+      {{ unit.name }}
+    </option>
+  </select>
+  <span v-if="form.errors.unit_id" class="mt-4 text-red-500">{{ form.errors.unit_id }}</span>
+</div>
+
                            <div class="w-full">
                               <label
                                  for="parent_id"
@@ -609,7 +640,7 @@
    };
 
    // Define props
-   const { open, categories, colors, suppliers, sizes, selectedProduct } =
+   const { open, categories, colors, suppliers, sizes, selectedProduct, units } =
      defineProps({
        open: {
          type: Boolean,
@@ -635,6 +666,10 @@
          type: Object,
          default: null,
        },
+       units: {
+         type: Array,
+         required: true,
+       },
      });
 
    // UseForm for form state
@@ -646,6 +681,8 @@
      code: "",
      size_id: "",
      color_id: "",
+     type: "",
+  unit_id: "",
 
      discount: 0,
      cost_price: null,
@@ -737,6 +774,8 @@
          form.discounted_price = newValue.discounted_price || null;
          form.barcode = newValue.barcode || "";
          form.batch_no = newValue.batch_no || "";
+         form.type = newValue.type || "";
+      form.unit_id = newValue.unit_id || "";
 
 
      form.wholesale_discount = newValue.wholesale_discount || 0;

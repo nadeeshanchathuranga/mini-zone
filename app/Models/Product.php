@@ -37,6 +37,7 @@ class Product extends Model
         'is_whole_price_used',
         'certificate_path',
         'unit_id',
+        'type',
     ];
 
     // public static function boot()
