@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\StockTransaction;
+use App\Models\Unit;
 use App\Traits\GeneratesUniqueCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -48,7 +49,7 @@ public function fetchProducts(Request $request)
     $stockStatus = $request->input('stockStatus');
     $selectedCategory = $request->input('selectedCategory');
 
-    $productsQuery = Product::with('category', 'color', 'size', 'supplier')
+    $productsQuery = Product::with('category', 'color', 'size', 'supplier','unit')
         ->whereNotNull('products.name')
         ->when($query, function ($qb) use ($query) {
             $qb->where(function ($sub) use ($query) {
@@ -149,11 +150,15 @@ public function fetchProducts(Request $request)
         // Total filtered products
         $totalProducts = $products->total();
 
+         $units = Unit::orderBy('id', 'desc')->get();
+         
+
         // Other dropdown / alert data
         $allcategories = Category::with('parent')->get()->map(function ($category) {
             $category->hierarchy_string = $category->hierarchy_string;
             return $category;
         });
+        
 
         $preOrderProducts = Product::with(['category', 'supplier', 'color', 'size'])
             ->whereColumn('total_quantity', '<=', 'preorder_level_qty')
@@ -184,6 +189,7 @@ public function fetchProducts(Request $request)
             'totalProducts' => $totalProducts,
             'search' => $query,
             'sort' => $sortOrder,
+            'units' => $units,
             'color' => $selectedColor,
             'size' => $selectedSize,
             'stockStatus' => $stockStatus,
@@ -224,247 +230,206 @@ public function fetchProducts(Request $request)
      */
 
 
-
-
-    public function store(Request $request)
-    {
-
-
-        if (!Gate::allows('hasRole', ['Admin'])) {
-            abort(403, 'Unauthorized');
-        }
-
-        $validated = $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'code' => 'nullable|max:50',
-            // 'code' => [
-            //     'string',
-            //     'max:50',
-            //     Rule::unique('products')->whereNull('deleted_at'),
-            // ],
-            'size_id' => 'nullable|exists:sizes,id',
-            'color_id' => 'nullable|exists:colors,id',
-            'cost_price' => 'nullable|numeric|min:0',
-            'selling_price' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($value < $request->input('cost_price')) {
-                        $fail('The selling price must be greater than or equal to the cost price.');
-                    }
-                },
-            ],
-            'discounted_price' => 'nullable|numeric|min:0',
-            'discount' => 'nullable|numeric|min:0|max:100',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'preorder_level_qty' => 'nullable|integer|min:0',
-
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'barcode' => 'nullable|string|unique:products',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'expire_date' => 'nullable|date',
-            'expiry_date_margin' => 'nullable|integer|min:0',
-            'batch_no' => 'nullable|max:50',
-            'purchase_date' => 'nullable|date',
-
-
-            'whole_price' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($value < $request->input('cost_price')) {
-                        $fail('The selling price must be greater than or equal to the cost price.');
-                    }
-                },
-            ],
-            'wholesale_discount' => 'nullable|numeric|min:0|max:100',
-            'final_whole_price' => 'nullable|numeric|min:0',
-            'certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-
-        ]);
-
-
-
-        try {
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                $fileExtension = $request->file('image')->getClientOriginalExtension();
-                $fileName = 'product_' . date("YmdHis") . '.' . $fileExtension;
-                $path = $request->file('image')->storeAs('products', $fileName, 'public');
-                $validated['image'] = 'storage/' . $path;
-            }
-
-            if (empty($validated['barcode'])) {
-                $validated['barcode'] = $this->generateUniqueCode();
-            }
-
-
-
-            if ($request->hasFile('certificate')) {
-                $fileExtension = $request->file('certificate')->getClientOriginalExtension();
-                $fileName = 'certificate_' . date("YmdHis") . '.' . $fileExtension;
-                $path = $request->file('certificate')->storeAs('certificates', $fileName, 'public'); // folder: certificates (plural is better)
-                $validated['certificate_path'] = 'storage/' . $path;
-            }
-
-
-
-            $validated['total_quantity'] = $validated['stock_quantity'] ?? 0;
-            // Create the product
-            $product = Product::create($validated);
-            // $product->update(['code' => 'PROD-' . $product->id]);
-
-            // Add stock transaction if stock quantity is provided
-            $stockQuantity = $validated['stock_quantity'] ?? 0; // Default to 0 if not provided
-            if ($stockQuantity > 0) {
-                StockTransaction::create([
-                    'product_id' => $product->id,
-                    'transaction_type' => 'Added',
-                    'quantity' => $stockQuantity,
-                    'transaction_date' => now(),
-                    'supplier_id' => $validated['supplier_id'] ?? null,
-                ]);
-            }
-
-            // Redirect with success message
-            return redirect()->route('products.index')->banner('Product created successfully');
-        } catch (\Exception $e) {
-
-            \Log::error('Error creating product: ' . $e->getMessage());
-
-            return redirect()->back()->with('error', 'An error occurred while creating the product. Please try again.');
-        }
+public function store(Request $request)
+{
+    if (!Gate::allows('hasRole', ['Admin'])) {
+        abort(403, 'Unauthorized');
     }
 
+    $validated = $request->validate([
+        'category_id' => 'nullable|exists:categories,id',
+        'name' => 'required|string|max:255',
+        'code' => 'nullable|max:50',
+        'type' => ['required', 'in:Normal,Weight Based'],
+        'unit_id' => 'nullable|exists:units,id',
+        'size_id' => 'nullable|exists:sizes,id',
+        'color_id' => 'nullable|exists:colors,id',
+        'cost_price' => 'nullable|numeric|min:0',
+        'selling_price' => [
+            'nullable',
+            'numeric',
+            'min:0',
+            function ($attribute, $value, $fail) use ($request) {
+                if ($value < $request->input('cost_price')) {
+                    $fail('The selling price must be greater than or equal to the cost price.');
+                }
+            },
+        ],
+        'discounted_price' => 'nullable|numeric|min:0',
+        'discount' => 'nullable|numeric|min:0|max:100',
+        'stock_quantity' => 'nullable|integer|min:0',
+        'preorder_level_qty' => 'nullable|integer|min:0',
+        'supplier_id' => 'nullable|exists:suppliers,id',
+        'barcode' => 'nullable|string|unique:products',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'expire_date' => 'nullable|date',
+        'expiry_date_margin' => 'nullable|integer|min:0',
+        'batch_no' => 'nullable|max:50',
+        'purchase_date' => 'nullable|date',
+        'whole_price' => [
+            'nullable',
+            'numeric',
+            'min:0',
+            function ($attribute, $value, $fail) use ($request) {
+                if ($value < $request->input('cost_price')) {
+                    $fail('The selling price must be greater than or equal to the cost price.');
+                }
+            },
+        ],
+        'wholesale_discount' => 'nullable|numeric|min:0|max:100',
+        'final_whole_price' => 'nullable|numeric|min:0',
+        'certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+    ]);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public function productVariantStore(Request $request)
-    {
-        if (!Gate::allows('hasRole', ['Admin'])) {
-            abort(403, 'Unauthorized');
+    try {
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $fileExtension = $request->file('image')->getClientOriginalExtension();
+            $fileName = 'product_' . date("YmdHis") . '.' . $fileExtension;
+            $path = $request->file('image')->storeAs('products', $fileName, 'public');
+            $validated['image'] = 'storage/' . $path;
         }
 
-        $validated = $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'code' => [
-                'nullable',
-                'string',
-                'max:50',
-                Rule::unique('products')->whereNull('deleted_at'),
-            ],
-            'barcode' => [
-                'nullable',
-                'string',
-                Rule::unique('products')->whereNull('deleted_at'),
-            ],
-            'size_id' => 'nullable|exists:sizes,id',
-            'color_id' => 'nullable|exists:colors,id',
-            'cost_price' => 'nullable|numeric|min:0',
-            'selling_price' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($value < ($request->input('cost_price') ?? 0)) {
-                        $fail('The selling price must be greater than or equal to the cost price.');
-                    }
-                },
-            ],
-            'discounted_price' => 'nullable|numeric|min:0',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'discount' => 'nullable|numeric|min:0|max:100',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'expire_date' => 'nullable|date',
-            'expiry_date_margin' => 'nullable|integer|min:0',
-            'preorder_level_qty' => 'nullable|integer|min:0',
-            'purchase_date' => 'nullable|date',
-            'batch_no' => 'nullable|string|max:50',
-            'whole_price' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($value < $request->input('cost_price')) {
-                        $fail('The selling price must be greater than or equal to the cost price.');
-                    }
-                },
-            ],
-            'wholesale_discount' => 'nullable|numeric|min:0|max:100',
-            'final_whole_price' => 'nullable|numeric|min:0',
-            'certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
-
-        try {
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                $fileExtension = $request->file('image')->getClientOriginalExtension();
-                $fileName = 'product_' . date("YmdHis") . '.' . $fileExtension;
-                $path = $request->file('image')->storeAs('products', $fileName, 'public');
-                $validated['image'] = 'storage/' . $path;
-            }
-
-
-            // Generate barcode if not provided
-            if (empty($validated['barcode'])) {
-                $validated['barcode'] = $this->generateUniqueBarcode();
-            }
-
-            if ($request->hasFile('certificate')) {
-                $certificatePath = $request->file('certificate')->store('certificates', 'public');
-                $product->certificate_path = $certificatePath;
-            }
-
-
-            // Create product
-            $product = Product::create($validated);
-
-            // Add stock transaction if stock quantity exists
-            $stockQuantity = $validated['stock_quantity'] ?? 0;
-            if ($stockQuantity > 0) {
-                StockTransaction::create([
-                    'product_id' => $product->id,
-                    'transaction_type' => 'Added',
-                    'quantity' => $stockQuantity,
-                    'transaction_date' => now(),
-                    'supplier_id' => $validated['supplier_id'] ?? null,
-                ]);
-            }
-
-            return redirect()->route('products.index')->banner('Product created successfully');
-        } catch (\Exception $e) {
-            Log::error('Error creating product: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'An error occurred while creating the product. Please try again.');
+        if (empty($validated['barcode'])) {
+            $validated['barcode'] = $this->generateUniqueCode();
         }
+
+        if ($request->hasFile('certificate')) {
+            $fileExtension = $request->file('certificate')->getClientOriginalExtension();
+            $fileName = 'certificate_' . date("YmdHis") . '.' . $fileExtension;
+            $path = $request->file('certificate')->storeAs('certificates', $fileName, 'public');
+            $validated['certificate_path'] = 'storage/' . $path;
+        }
+
+        $validated['total_quantity'] = $validated['stock_quantity'] ?? 0;
+        
+      
+        // Create the product with ALL validated data
+        $product = Product::create($validated);
+
+        // Add stock transaction if stock quantity is provided
+        $stockQuantity = $validated['stock_quantity'] ?? 0;
+        if ($stockQuantity > 0) {
+            StockTransaction::create([
+                'product_id' => $product->id,
+                'transaction_type' => 'Added',
+                'quantity' => $stockQuantity,
+                'transaction_date' => now(),
+                'supplier_id' => $validated['supplier_id'] ?? null,
+            ]);
+        }
+
+        return redirect()->route('products.index')->banner('Product created successfully');
+    } catch (\Exception $e) {
+        \Log::error('Error creating product: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'An error occurred while creating the product. Please try again.');
+    }
+}
+public function productVariantStore(Request $request)
+{
+    if (!Gate::allows('hasRole', ['Admin'])) {
+        abort(403, 'Unauthorized');
     }
 
-    // Helper to generate unique barcode
-    private function generateUniqueBarcode($length = 7)
-    {
-        do {
-            $barcode = strtoupper(Str::random($length));
-        } while (Product::where('barcode', $barcode)->exists());
+    $validated = $request->validate([
+        'category_id' => 'nullable|exists:categories,id',
+        'name' => 'required|string|max:255',
+        'code' => [
+            'nullable',
+            'string',
+            'max:50',
+            Rule::unique('products')->whereNull('deleted_at'),
+        ],
+        'barcode' => [
+            'nullable',
+            'string',
+            Rule::unique('products')->whereNull('deleted_at'),
+        ],
+        'type' => ['required', 'in:Normal,Weight Based'], // ✅ ADDED
+        'unit_id' => 'nullable|exists:units,id', // ✅ ADDED
+        'size_id' => 'nullable|exists:sizes,id',
+        'color_id' => 'nullable|exists:colors,id',
+        'cost_price' => 'nullable|numeric|min:0',
+        'selling_price' => [
+            'nullable',
+            'numeric',
+            'min:0',
+            function ($attribute, $value, $fail) use ($request) {
+                if ($value < ($request->input('cost_price') ?? 0)) {
+                    $fail('The selling price must be greater than or equal to the cost price.');
+                }
+            },
+        ],
+        'discounted_price' => 'nullable|numeric|min:0',
+        'stock_quantity' => 'nullable|integer|min:0',
+        'discount' => 'nullable|numeric|min:0|max:100',
+        'supplier_id' => 'nullable|exists:suppliers,id',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+        'expire_date' => 'nullable|date',
+        'expiry_date_margin' => 'nullable|integer|min:0',
+        'preorder_level_qty' => 'nullable|integer|min:0',
+        'purchase_date' => 'nullable|date',
+        'batch_no' => 'nullable|string|max:50',
+        'whole_price' => [
+            'nullable',
+            'numeric',
+            'min:0',
+            function ($attribute, $value, $fail) use ($request) {
+                if ($value < $request->input('cost_price')) {
+                    $fail('The selling price must be greater than or equal to the cost price.');
+                }
+            },
+        ],
+        'wholesale_discount' => 'nullable|numeric|min:0|max:100',
+        'final_whole_price' => 'nullable|numeric|min:0',
+        'certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+    ]);
 
-        return $barcode;
+    try {
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $fileExtension = $request->file('image')->getClientOriginalExtension();
+            $fileName = 'product_' . date("YmdHis") . '.' . $fileExtension;
+            $path = $request->file('image')->storeAs('products', $fileName, 'public');
+            $validated['image'] = 'storage/' . $path;
+        }
+
+        // Generate barcode if not provided
+        if (empty($validated['barcode'])) {
+            $validated['barcode'] = $this->generateUniqueBarcode();
+        }
+
+        // Handle certificate upload
+        if ($request->hasFile('certificate')) {
+            $fileExtension = $request->file('certificate')->getClientOriginalExtension();
+            $fileName = 'certificate_' . date("YmdHis") . '.' . $fileExtension;
+            $path = $request->file('certificate')->storeAs('certificates', $fileName, 'public');
+            $validated['certificate_path'] = 'storage/' . $path;
+        }
+
+        $validated['total_quantity'] = $validated['stock_quantity'] ?? 0;
+
+        // Create product with ALL validated data including type and unit_id
+        $product = Product::create($validated);
+
+        // Add stock transaction if stock quantity exists
+        $stockQuantity = $validated['stock_quantity'] ?? 0;
+        if ($stockQuantity > 0) {
+            StockTransaction::create([
+                'product_id' => $product->id,
+                'transaction_type' => 'Added',
+                'quantity' => $stockQuantity,
+                'transaction_date' => now(),
+                'supplier_id' => $validated['supplier_id'] ?? null,
+            ]);
+        }
+
+        return redirect()->route('products.index')->banner('Product created successfully');
+    } catch (\Exception $e) {
+        \Log::error('Error creating product: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'An error occurred while creating the product. Please try again.');
     }
-
+}
 
     /**
      * Display the specified resource.
@@ -504,6 +469,7 @@ public function fetchProducts(Request $request)
         $colors = Color::orderBy('created_at', 'desc')->get();
         $sizes = Size::orderBy('created_at', 'desc')->get();
         $suppliers = Supplier::orderBy('created_at', 'desc')->get();
+        $units = Unit::latest()->get(); 
 
         return inertia('Products/Edit', [
             'product' => $product,
@@ -511,6 +477,7 @@ public function fetchProducts(Request $request)
             'suppliers' => $suppliers,
             'colors' => $colors,
             'sizes' => $sizes,
+            'units' => $units,
         ]);
     }
 
@@ -537,6 +504,7 @@ public function fetchProducts(Request $request)
                 'discounted_price' => 'nullable|numeric|min:0',
                 'discount' => 'nullable|numeric|min:0|max:100',
                 'stock_quantity' => 'required|integer|min:0',
+                'unit_id' => 'nullable|exists:units,id',
 
                 'image' => 'nullable|image|max:2048',
                 'certificate' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
@@ -549,6 +517,7 @@ public function fetchProducts(Request $request)
                 'final_whole_price' => 'nullable|numeric|min:0',
                 'wholesale_discount' => 'nullable|numeric|min:0|max:100',
                 'code' => 'nullable|max:50',
+                 'type' => ['required', 'in:Normal,Weight Based'],
             ]);
 
             // Handle image upload
