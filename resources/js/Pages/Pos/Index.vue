@@ -1,51 +1,29 @@
 <template>
   <Head title="POS" />
 
-  <!-- Shortcut Keys Flex Row -->
-  <ul class="flex flex-wrap justify-center gap-2 p-4 text-gray-800 bg-yellow-50 border-l-4 border-yellow-500  rounded-lg">
-    <li class="flex items-center gap-2">
-      <span class="font-mono font-bold bg-green-200 text-green-900 px-3 py-1 rounded-md">Fn + F1</span>
-      <span class="text-xl font-bold tracking-wide text-gray-900 md:text-left ml-auto">Add Service</span>
-    </li>
-    <li class="flex items-center gap-2">
-      <span class="font-mono font-bold bg-blue-200 text-blue-900 px-3 py-1 rounded-md">Fn + F2</span>
-      <span class="text-xl font-bold tracking-wide text-gray-900 md:text-left ml-auto">Add Expense</span>
-    </li>
-    <li class="flex items-center gap-2">
-      <span class="font-mono font-bold bg-purple-200 text-purple-900 px-3 py-1 rounded-md">Fn + F3</span>
-      <span class="text-xl font-bold tracking-wide text-gray-900 md:text-left ml-auto">User Manual</span>
-    </li>
-    <li class="flex items-center gap-2">
-      <span class="font-mono font-bold bg-pink-200 text-pink-900 px-3 py-1 rounded-md">Fn + F4</span>
-      <span class="text-xl font-bold tracking-wide text-gray-900 md:text-left ml-auto">Orders & Customer</span>
-    </li>
-
-    <li class="flex items-center gap-2">
-      <span class="font-mono font-bold bg-orange-200 text-pink-900 px-3 py-1 rounded-md">Fn + F5</span>
-      <span class="text-xl font-bold tracking-wide text-gray-900 md:text-left ml-auto">Orders & Customer</span>
-    </li>
-
-
-    <li class="flex items-center gap-2">
-      <span class="font-mono font-bold bg-amber-200 text-amber-900 px-3 py-1 rounded-md">Fn + Shift</span>
-      <span class="text-xl font-bold tracking-wide text-gray-900 md:text-left ml-auto">Focus Custom Discount</span>
-    </li>
-
-
-        <li class="flex items-center gap-2">
-      <span class="font-mono font-bold bg-red-900 text-white px-3 py-1 rounded-md">Delete</span>
-      <span class="text-xl font-bold tracking-wide text-gray-900 md:text-left ml-auto">Focus Close</span>
-    </li>
-  </ul>
-
   <div
     class="flex flex-col items-center justify-start h-screen  space-y-3 bg-gray-100 md:px-20 px-4 overflow-auto text-[1.06rem] leading-relaxed selection:bg-yellow-200"
   >
+    <!-- Logo Section - Outside the box -->
+    <div class="w-full md:w-5/6 flex flex-col items-start pt-4 pb-2 gap-2">
+      <Link href="/dashboard" class="cursor-pointer hover:opacity-80 transition-opacity">
+        <img src="/images/jaan_logo.jpg" alt="JAAN Network" class="h-16 md:h-20 object-contain" />
+      </Link>
+      <Link 
+        href="/dashboard" 
+        class="inline-flex items-center gap-4 px-6 py-3 bg-gray-100 text-gray-900 font-bold text-2xl rounded-lg hover:bg-gray-200 transition-colors border border-gray-300"
+      >
+        <div class="flex items-center justify-center w-10 h-10 rounded-full border-2 border-gray-900">
+          <i class="ri-arrow-left-line text-2xl"></i>
+        </div>
+        <span>POS</span>
+      </Link>
+    </div>
+
     <div class="w-full md:w-5/6  ">
       <div class="flex flex-col w-full gap-5 md:flex-row">
         <div class="flex w-full p-5 border-2 border-black rounded-2xl bg-white shadow-sm">
           <div class="flex flex-col items-start justify-center w-full md:px-8 px-2 gap-5">
-         
 
             <!-- Top Controls -->
             <div class="flex flex-col md:flex-row md:items-center md:justify-between w-full gap-3">
@@ -183,12 +161,36 @@
                 </div>
 
                 <div class="w-full max-h-[50vh] overflow-y-auto">
-                  <p
+                  <!-- Barcode Scanning Animation -->
+                  <div
                     v-if="products.length === 0 && services.length === 0"
-                    class="text-xl text-red-500 text-center font-medium py-2"
+                    class="flex flex-col items-center justify-center py-20"
                   >
-                    No Products or Services to show
-                  </p>
+                    <div class="relative w-48 h-48 mb-6">
+                      <!-- Animated scanning line -->
+                      <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-40 h-32 border-4 border-blue-500 rounded-lg relative overflow-hidden">
+                          <!-- Horizontal scanning line animation -->
+                          <div class="absolute w-full h-1 bg-red-500 animate-scan shadow-lg"></div>
+                          <!-- Barcode lines -->
+                          <div class="flex items-center justify-center h-full gap-1 px-4">
+                            <div class="w-1 h-20 bg-gray-800"></div>
+                            <div class="w-2 h-20 bg-gray-800"></div>
+                            <div class="w-1 h-20 bg-gray-800"></div>
+                            <div class="w-3 h-20 bg-gray-800"></div>
+                            <div class="w-1 h-20 bg-gray-800"></div>
+                            <div class="w-2 h-20 bg-gray-800"></div>
+                            <div class="w-1 h-20 bg-gray-800"></div>
+                            <div class="w-2 h-20 bg-gray-800"></div>
+                            <div class="w-3 h-20 bg-gray-800"></div>
+                            <div class="w-1 h-20 bg-gray-800"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="text-xl text-gray-700 font-medium animate-pulse">Scanning Barcode...</p>
+                    <p class="text-sm text-gray-500 mt-2">Please scan a product to begin</p>
+                  </div>
 
                
                   <!-- Product List -->
@@ -1882,3 +1884,21 @@ watch(isReturnBill, (newVal) => {
   }
 });
 </script>
+
+<style scoped>
+@keyframes scan {
+  0% {
+    top: 0;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0;
+  }
+}
+
+.animate-scan {
+  animation: scan 2s ease-in-out infinite;
+}
+</style>
