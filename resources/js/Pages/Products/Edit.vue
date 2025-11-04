@@ -198,6 +198,45 @@
   <span v-if="form.errors.supplier_id" class="text-sm text-red-500">{{ form.errors.supplier_id }}</span>
 </div> -->
 
+          <!-- Add Type Dropdown -->
+          <div>
+            <label for="type" class="block text-sm font-medium text-gray-700"
+              >Type</label
+            >
+            <select
+              v-model="form.type"
+              id="type"
+              class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+            >
+              <option value="">Select Type</option>
+              <option value="Normal">Normal</option>
+              <option value="Weight Based">Weight Based</option>
+            </select>
+            <span v-if="form.errors.type" class="text-sm text-red-500">{{
+              form.errors.type
+            }}</span>
+          </div>
+
+          <!-- Add Unit Dropdown (Conditional) -->
+          <div v-if="form.type === 'Weight Based'">
+            <label for="unit_id" class="block text-sm font-medium text-gray-700"
+              >Unit</label
+            >
+            <select
+              v-model="form.unit_id"
+              id="unit_id"
+              class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+            >
+              <option value="">Select Unit</option>
+              <option v-for="unit in units" :key="unit.id" :value="unit.id">
+                {{ unit.name }}
+              </option>
+            </select>
+            <span v-if="form.errors.unit_id" class="text-sm text-red-500">{{
+              form.errors.unit_id
+            }}</span>
+          </div>
+
           <div class="flex flex-wrap gap-4">
             <!-- Old Image -->
             <div class="w-full md:w-6/12">
@@ -273,7 +312,8 @@ const form = useForm({
   selling_price: props.product.selling_price || null,
   stock_quantity: props.product.stock_quantity || null,
   barcode: props.product.barcode || "",
-  //   supplier_id: props.product.supplier_id || null,
+  type: props.product.type || "", // Added type
+  unit_id: props.product.unit_id || "", // Added unit_id
   image: null,
 });
 
@@ -282,10 +322,11 @@ const handleImageUpload = (event) => {
 };
 
 const submit = () => {
+  // Ensure the `type` field is sent correctly
   form.post(`/products/${props.product.id}`, {
     preserveScroll: true,
     onSuccess: () => {
-      console.log("Product updated successfully!");
+      console.log("Product updated successfully!", { type: form.type });
     },
     onError: (errors) => {
       console.error("Form submission failed:", errors);

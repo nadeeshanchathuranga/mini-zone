@@ -419,6 +419,7 @@
          :colors="colors"
          :sizes="sizes"
          :suppliers="suppliers"
+         :units="props.units || []"
          v-model:open="isCreateModalOpen"
          />
       <ProductUpdateModel
@@ -428,6 +429,7 @@
          :sizes="sizes"
          v-model:open="isEditModalOpen"
          :selected-product="selectedProduct"
+         :units="props.units || []"
          />
       <ProductDuplicateModel
          :categories="allcategories"
@@ -598,6 +600,7 @@
      selectedCategory: String,
      preOrderAlertCount: Number,
      expiryAlertCount: Number,
+         units: Array,
 
    });
 
@@ -634,6 +637,9 @@
    });
    const showModal = ref(false);
    const form = useForm({});
+
+      // expose units from props for child component
+      const units = ref(props.units || []);
 
    const openModal = (id) => {
      productToDelete.value = id;
