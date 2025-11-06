@@ -217,6 +217,9 @@
   <div class="flex flex-col justify-between w-2/3 gap-2">
     <p class="text-xl text-gray-900 font-semibold">
       {{ item.name }}
+      <span v-if="item.type === 'Weight Based' && item.unit" class="ml-2 text-sm text-gray-600 font-normal">
+        ({{ item.unit.name }})
+      </span>
     </p>
 
     <div class="flex items-center justify-between w-full">
