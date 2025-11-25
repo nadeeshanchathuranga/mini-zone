@@ -25,7 +25,9 @@
           leave-from="opacity-100 scale-100"
           leave-to="opacity-0 scale-95"
         >
-          <DialogPanel class="bg-white text-black border-4 border-blue-600 rounded-[20px] shadow-xl w-5/6 lg:w-3/6 p-6">
+          <DialogPanel
+            class="bg-white text-black border-4 border-blue-600 rounded-[20px] shadow-xl w-5/6 lg:w-3/6 p-6"
+          >
             <div class="flex flex-col items-start justify-start w-full h-full px-2 pt-4">
               <div class="flex justify-center w-full h-full py-4 space-x-8 items-start-center">
                 <!-- Left Side: Image -->
@@ -54,25 +56,25 @@
 
                   <!-- Category -->
                   <p class="pb-6 mt-2 text-[#00000099] text-xl font-normal italic">
-                    {{ selectedProduct.category?.name ?? "No Category" }}
+                    {{ selectedProduct.category?.name ?? 'No Category' }}
                   </p>
 
                   <!-- Supplier -->
                   <p class="pb-6 text-2xl font-bold text-black">
                     <span class="text-[#00000099] font-normal">Supplier: </span>
-                    {{ selectedProduct.supplier?.name || "N/A" }}
+                    {{ selectedProduct.supplier?.name || 'N/A' }}
                   </p>
 
                   <!-- Product Code -->
                   <p class="pb-6 text-2xl font-bold text-black">
                     <span class="text-[#00000099] font-normal">Product Code: </span>
-                    {{ selectedProduct?.code ?? "N/A" }}
+                    {{ selectedProduct?.code ?? 'N/A' }}
                   </p>
 
                   <!-- Batch Number -->
                   <p class="pb-6 text-2xl font-bold text-black">
                     <span class="text-[#00000099] font-normal">Batch No: </span>
-                    {{ selectedProduct?.batch_no ?? "N/A" }}
+                    {{ selectedProduct?.batch_no ?? 'N/A' }}
                   </p>
 
                   <!-- Color -->
@@ -81,7 +83,7 @@
                       <p class="text-justify text-[#00000099] text-2xl flex items-center pb-6">
                         Color:
                         <span class="font-bold text-black">
-                          {{ selectedProduct?.color?.name ?? "N/A" }}
+                          {{ selectedProduct?.color?.name ?? 'N/A' }}
                         </span>
                       </p>
                     </div>
@@ -93,7 +95,7 @@
                       <p class="text-[#00000099] text-2xl pb-6">
                         Size:
                         <span class="px-2 py-2 font-bold text-black border-2 border-gray-800 rounded-xl">
-                          {{ selectedProduct?.size?.name ?? "N/A" }}
+                          {{ selectedProduct?.size?.name ?? 'N/A' }}
                         </span>
                       </p>
                     </div>
@@ -104,13 +106,13 @@
                     <div class="flex flex-col w-full">
                       <p class="text-[#00000099]">Selling Price:</p>
                       <p class="font-bold text-black">
-                        {{ selectedProduct?.selling_price ?? "N/A" }} LKR
+                        {{ selectedProduct?.selling_price ?? 'N/A' }} LKR
                       </p>
                     </div>
                     <div class="flex flex-col w-full">
                       <p class="text-[#00000099]">Cost Price:</p>
                       <p class="font-bold text-black">
-                        {{ selectedProduct?.cost_price ?? "N/A" }} LKR
+                        {{ selectedProduct?.cost_price ?? 'N/A' }} LKR
                       </p>
                     </div>
                   </div>
@@ -139,7 +141,7 @@
                     <div class="flex flex-col w-full">
                       <p class="text-[#00000099]">Quantity:</p>
                       <p class="font-bold text-black">
-                        {{ selectedProduct?.stock_quantity ?? "N/A" }}
+                        {{ selectedProduct?.stock_quantity ?? 'N/A' }}
                       </p>
                     </div>
                   </div>
@@ -183,21 +185,21 @@ import {
   DialogTitle,
   TransitionChild,
   TransitionRoot,
-} from "@headlessui/vue";
-import { ref, watch, computed } from "vue";
-import { useForm } from "@inertiajs/vue3";
-import dayjs from "dayjs";
-import advancedFormat from "dayjs/plugin/advancedFormat";
-import { HasRole } from "@/Utils/Permissions";
+} from '@headlessui/vue';
+import { ref, computed } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+import { HasRole } from '@/Utils/Permissions';
 
 dayjs.extend(advancedFormat);
 
 const playClickSound = () => {
-  const clickSound = new Audio("/sounds/click-sound.mp3");
+  const clickSound = new Audio('/sounds/click-sound.mp3');
   clickSound.play();
 };
 
-const emit = defineEmits(["update:open"]);
+const emit = defineEmits(['update:open']);
 
 const { selectedProduct } = defineProps({
   open: {
@@ -226,8 +228,8 @@ const barcodeCount = ref(1);
 
 const formattedDate = computed(() =>
   selectedProduct && selectedProduct.created_at
-    ? dayjs(selectedProduct.created_at).format("Do MMMM YYYY")
-    : ""
+    ? dayjs(selectedProduct.created_at).format('Do MMMM YYYY')
+    : ''
 );
 
 function generateAndPrintBarcodes() {
@@ -246,22 +248,33 @@ function generateAndPrintBarcodes() {
   // Sizing constants (mm/px)
   const MM_TO_PX = 3.78;
   const LABEL_W_MM = 30;
-  const LABEL_H_MM = 18;
+  const LABEL_H_MM = 22; // label size
   const INNER_PADDING_MM = 0.5;
-  const GUTTER_MM = 0; // Removed gap - configured in printer
-  const BARCODE_H_MM = 8; // Reduced from 12
-  const NAME_FZ_PX = 9;
-  const PRICE_FZ_PX = 16; // Increased for better visibility
+  const GUTTER_MM = 0; // gap between labels (handled by printer)
+  const BARCODE_H_MM = 10; // slightly taller barcode
+  const NAME_FZ_PX = 8;
+  const PRICE_FZ_PX = 12;
 
   // Build labels HTML
-  const labelsHtml = Array.from({ length: count }).map((_, idx) => `
+  const labelsHtml = Array.from({ length: count })
+    .map(
+      (_, idx) => `
     <div class="barcode-label">
       <div class="product-name">${selectedProduct?.name || 'N/A'}</div>
-      <div class="product-name">${selectedProduct?.barcode || 'N/A'}</div>
+      <div class="product-code">${selectedProduct?.code || 'N/A'}</div>
       <div class="barcode-svg"><svg id="barcode${idx + 1}"></svg></div>
-      <div class="bottom-info">${(selectedProduct?.selling_price ?? 'N/A')} LKR</div>
+      <div class="price-info">${selectedProduct?.selling_price ?? 'N/A'} LKR</div>
+      <div class="expiry-info">
+        Exp: ${
+          selectedProduct?.expire_date
+            ? dayjs(selectedProduct.expire_date).format('DD MMM YYYY')
+            : 'N/A'
+        }
+      </div>
     </div>
-  `).join('');
+  `
+    )
+    .join('');
 
   const htmlContent = `
     <html>
@@ -292,13 +305,13 @@ function generateAndPrintBarcodes() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
+          justify-content: space-evenly;
           overflow: hidden;
           margin: 0;
         }
 
         .product-name {
-          font-size: ${NAME_FZ_PX}px;
+          font-size: ${NAME_FZ_PX - 1}px;
           font-weight: 600;
           line-height: 1.1;
           width: 100%;
@@ -308,6 +321,20 @@ function generateAndPrintBarcodes() {
           text-overflow: ellipsis;
           margin: 0;
           padding: 0;
+        }
+
+        .product-code {
+          font-size: ${NAME_FZ_PX - 2}px;
+          font-weight: 500;
+          line-height: 1;
+          width: 100%;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 0;
+          padding: 0;
+          color: #666;
         }
 
         .barcode-svg {
@@ -326,15 +353,27 @@ function generateAndPrintBarcodes() {
           display: block;
         }
 
-        .bottom-info {
+        .price-info {
           font-size: ${PRICE_FZ_PX}px;
           font-weight: 700;
           line-height: 1;
           white-space: nowrap;
           width: 100%;
           text-align: center;
-          margin: 0;
+          margin: 1mm 0 0 0;
           padding: 0;
+        }
+
+        .expiry-info {
+          font-size: ${NAME_FZ_PX - 1}px;
+          font-weight: 600;
+          line-height: 1;
+          white-space: nowrap;
+          width: 100%;
+          text-align: center;
+          margin: 0.5mm 0 0 0;
+          padding: 0;
+          color: #d32f2f;
         }
 
         @media print {
@@ -372,7 +411,7 @@ function generateAndPrintBarcodes() {
       JsBarcode(svg, barcode, {
         format: 'CODE128',
         lineColor: '#000',
-        width: 1,
+        width: 1.1,
         height: Math.round(BARCODE_H_MM * MM_TO_PX),
         displayValue: false,
         margin: 0,
