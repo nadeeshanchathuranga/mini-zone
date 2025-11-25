@@ -248,7 +248,7 @@ function generateAndPrintBarcodes() {
   // Sizing constants (mm/px)
   const MM_TO_PX = 3.78;
   const LABEL_W_MM = 30;
-  const LABEL_H_MM = 22; // label size
+  const LABEL_H_MM = 20; // label size
   const INNER_PADDING_MM = 0.5;
   const GUTTER_MM = 0; // gap between labels (handled by printer)
   const BARCODE_H_MM = 10; // slightly taller barcode
